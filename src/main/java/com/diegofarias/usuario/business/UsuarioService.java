@@ -6,6 +6,7 @@ import com.diegofarias.usuario.infrasctructure.entity.Usuario;
 import com.diegofarias.usuario.infrasctructure.exceptions.ConflictException;
 import com.diegofarias.usuario.infrasctructure.exceptions.ResourceNotFoundException;
 import com.diegofarias.usuario.infrasctructure.repository.UsuarioRepository;
+import com.diegofarias.usuario.infrasctructure.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioConverter usuarioConverter;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     public UsuarioDTO salvaUsuario(UsuarioDTO usuarioDTO) {
         emailExiste(usuarioDTO.getEmail());
@@ -52,6 +54,24 @@ public class UsuarioService {
 
     public void deletaUsuarioPorEmail(String email) {
         usuarioRepository.deleteByEmail(email);
+    }
+
+    public UsuarioDTO atualizaDadosUsuario(String token, UsuarioDTO usuarioDTO) {
+        // Buscou o e-mail do usuário através do token (tirar obrigatoriedade de passar e-mail)
+        String email = jwtUtil.extractUsername(token.substring(7));
+
+        // Criptografia de senha
+        usuarioDTO.setSenha(usuarioDTO.getSenha() != null ? passwordEncoder.encode(usuarioDTO.getSenha()) : null);
+
+        // Buscou os dados do usuário no banco de dados
+        Usuario usuarioEntity = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("E-mail não localizado"));
+
+        // Mesclou os dados que recebemos na requisição DTO com os dados od banco de dados
+        Usuario usuario = usuarioConverter.updateUsuario(usuarioDTO, usuarioEntity);
+
+        // Salvou os dados do usuário convertido e depois pegou o retorno convertido para UsuarioDTO
+        return usuarioConverter.paraUsuarioDTO(usuarioRepository.save(usuario));
     }
 
 }
