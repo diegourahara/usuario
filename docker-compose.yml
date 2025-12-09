@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/db_usuario
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: farias+100
+    depends_on:
+      db:
+        condition: service_healthy # <--- ADICIONE ISSO AQUI
+
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: db_usuario
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: farias+100
+    ports:
+      - "5432:5432"
+    healthcheck: # <--- ADICIONE O HEALTHCHECK PARA POSTGRES
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
