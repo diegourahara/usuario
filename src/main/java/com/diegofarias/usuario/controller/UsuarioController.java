@@ -1,9 +1,11 @@
 package com.diegofarias.usuario.controller;
 
 import com.diegofarias.usuario.business.UsuarioService;
+import com.diegofarias.usuario.business.ViaCepService;
 import com.diegofarias.usuario.business.dto.EnderecoDTO;
 import com.diegofarias.usuario.business.dto.TelefoneDTO;
 import com.diegofarias.usuario.business.dto.UsuarioDTO;
+import com.diegofarias.usuario.infrasctructure.clients.ViaCepDTO;
 import com.diegofarias.usuario.infrasctructure.security.JwtUtil;
 import com.diegofarias.usuario.infrasctructure.security.SecurityConfig;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +29,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final ViaCepService viaCepService;
 
     @PostMapping
     @Operation(summary = "Salvar  Usuários", description = "Cria uma novo usuário")
@@ -129,6 +132,13 @@ public class UsuarioController {
             @RequestHeader("Authorization") String token
     ) {
         return ResponseEntity.ok(usuarioService.cadastraTelefone(token, telefoneDTO));
+    }
+
+    @GetMapping("/endereco/{cep}")
+    public ResponseEntity<ViaCepDTO> buscarDadosCep(
+            @PathVariable("cep") String cep
+    ) {
+        return ResponseEntity.ok(viaCepService.buscarDadosEndereco(cep));
     }
 
 }
